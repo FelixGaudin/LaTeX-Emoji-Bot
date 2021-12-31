@@ -23,3 +23,8 @@ Then run it !
 ```py
 python3 converter.py
 ```
+
+## Exemple 
+
+![exemple](https://raw.githubusercontent.com/FelixGaudin/LaTeX-Emoji-Bot/master/exemple_message.png)
+![exemple](https://raw.githubusercontent.com/FelixGaudin/LaTeX-Emoji-Bot/master/exemple_response.png)
