@@ -28,3 +28,9 @@ python3 converter.py
 
 ![exemple](https://raw.githubusercontent.com/FelixGaudin/LaTeX-Emoji-Bot/master/exemple_message.png)
 ![exemple](https://raw.githubusercontent.com/FelixGaudin/LaTeX-Emoji-Bot/master/exemple_response.png)
+
+## Helpfull links to install requirements
+
+- https://gist.github.com/rain1024/98dd5e2c6c8c28f9ea9d
+- https://newbedev.com/how-do-i-install-convert-on-a-linux-system
+- https://askubuntu.com/questions/1127260/imagemagick-convert-not-allowed
