@@ -19,8 +19,8 @@ def texit_compatibility(content):
     content = content.replace('€', '$')   # normal math
 
     # centered math : \[ shitty maths \]
-    content = content.replace(r'\{', r'\[')  # support with textit
-    content = content.replace(r'\}', r'\]')  # support with textit
+    content = content.replace(r'/{', r'\[')  # support with textit
+    content = content.replace(r'/}', r'\]')  # support with textit
 
     return content
 
@@ -112,7 +112,7 @@ class Converter(commands.Cog):
         embed=discord.Embed(title="LaTeX Bot", url="https://github.com/FelixGaudin/LaTeX-Emoji-Bot", description="A bot to have some beautifull LaTeX in discord", color=0xfce94f)
         embed.set_author(name="Félix#9897", url="https://github.com/FelixGaudin", icon_url="https://avatars.githubusercontent.com/u/44848675?v=4")
         embed.add_field(name="Inspiration", value="The TeXiT bot (https://top.gg/fr/bot/510789298321096704)", inline=False)
-        embed.add_field(name="Change compared to TeXiT", value=r"To deal with a TeXiT bot on the same server, the '$' became a '€' and the '\[ \]' became a '\{ \}'", inline=False)
+        embed.add_field(name="Change compared to TeXiT", value=r"To deal with a TeXiT bot on the same server, the '$' became a '€' and the '\\[ \\]' became a '/{ /}'", inline=False)
         embed.add_field(name="Emojis", value="The unicode emoji's are webscrapped from https://unicode.org/emoji/charts/full-emoji-list.html", inline=False)
         embed.set_footer(text="If you get any troubles with the bot don't hesitate to contact me (Félix#9897) or post an issue on GitHub : https://github.com/FelixGaudin/LaTeX-Emoji-Bot")
         await ctx.send(embed=embed)
