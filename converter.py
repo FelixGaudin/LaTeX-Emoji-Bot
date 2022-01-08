@@ -14,9 +14,15 @@ bot = commands.Bot(command_prefix="??", intents=intents)
 current_path = pathlib.Path().resolve()
 converter = os.path.join(current_path, 'convert.sh')
 
+def make_text(s):
+    return r"\textcolor{white}{" + s + r"}"
+
 def emote_finder(s):
     pattern = re.compile("<(?:a)?:[^:]+:([0-9]+)>")
     return re.split(pattern, s)
+
+def unicode_emote_finder(s):
+    return re.split(r'([^\x00-\xFF])', s)
 
 class Converter(commands.Cog):
     @commands.max_concurrency(1, wait=True)
@@ -32,7 +38,17 @@ class Converter(commands.Cog):
         for i, e in enumerate(tokenised):
             if (i % 2 == 0):
                 # normal text
-                text += r"\textcolor{white}{" + e + r"}"
+                for ii, ee in enumerate(unicode_emote_finder(e)):
+                    if (ii % 2) == 0:
+                        text += make_text(ee)
+                    else:
+                        # unicode emoji
+                        unicode_emote = f'U+{ord(ee):X}'
+                        emote_path = os.path.join(current_path, f"emotes/{unicode_emote}.png")
+                        if os.path.isfile(emote_path):
+                            text += r"\raisebox{-0.2\height}{\includegraphics[height=6mm]{" + emote_path + r"} }"
+                        else:
+                            text += make_text(f" [{unicode_emote}] ")
             else:
                 # Create a folder to store emotes
                 # https://appdividend.com/2021/07/03/how-to-create-directory-if-not-exist-in-python/
