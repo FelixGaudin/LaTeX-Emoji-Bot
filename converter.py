@@ -1,3 +1,4 @@
+import asyncio
 import subprocess
 import os
 import pathlib
@@ -8,7 +9,9 @@ from discord.ext import commands
 from private import TOKEN
 
 intents = discord.Intents().all()
-bot = commands.Bot(command_prefix="??", intents=intents)
+PREFIX = "??"
+
+bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 # get the path to the bash script converter
 current_path = pathlib.Path().resolve()
@@ -67,7 +70,46 @@ def format_emote_part(e, path):
 
     return r"\raisebox{-0.2\height}{\includegraphics[height=6mm]{" + emote_path + r"} }"
 
+def make_img(content, path, token):
+    text = r"\documentclass[preview, 12pt]{standalone}\nonstopmode\usepackage{amsmath}\usepackage{fancycom}\usepackage{color}\usepackage{tikz-cd}\begin{document}"
+
+    for i, e in enumerate(discord_emote_finder(content)):
+        if (i % 2 == 0):
+            # normal text
+            text += format_text_part(e)
+        else:
+            text += format_emote_part(e, path)
+
+    text += r"\end{document}"
+
+    # write the LaTeX file
+    with open(f"{token}.tex", 'w') as file:
+
+        file.write(text)
+
+    # output is maybe written as {token}.png
+    rc = subprocess.check_call([converter, f'{token}'])
+
+async def send_img(ctx, content, path, token):
+    try:
+        try:
+            make_img(content, path, token)
+        except:
+            # ¯\_(ツ)_/¯ Maybe it works
+            pass
+        finally:
+            image = f"{token}.png"
+            msg = await ctx.send(file=discord.File(image))
+            os.remove(image)
+            return msg
+    except Exception as e:
+        print(e)
+        msg = await ctx.send("Aled ça a pas marché : ¯\_(ツ)_/¯")
+        return msg
+
+
 class Converter(commands.Cog):
+
     @commands.max_concurrency(1, wait=True)
     @commands.command()
     async def tex(self, ctx, *message : str):
@@ -75,37 +117,20 @@ class Converter(commands.Cog):
         content = " ".join(message)
         content = texit_compatibility(content)
 
-        token = ctx.author.id
+        token = ctx.message.id
         path = os.path.join(current_path, f"{token}")
 
-        text = r"\documentclass[preview, 12pt]{standalone}\nonstopmode\usepackage{amsmath}\usepackage{fancycom}\usepackage{color}\usepackage{tikz-cd}\begin{document}"
-        
-        for i, e in enumerate(discord_emote_finder(content)):
-            if (i % 2 == 0):
-                # normal text
-                text += format_text_part(e)
-            else:
-                text += format_emote_part(e, path)
-
-        text += r"\end{document}"
-
-        # write the LaTeX file
-        with open(f"{token}.tex", 'w') as file:
-            file.write(text)
         try:
-            # Convert LaTex to PNG image
-            try:
-                rc = subprocess.check_call([converter, f'{token}'])
-            except:
-                # ¯\_(ツ)_/¯ Maybe it works
-                pass
-            finally:
-                image = f"{token}.png"
-                await ctx.send(file=discord.File(image))
-                os.remove(image)
-        except Exception as e:
-            print(e)
-            await ctx.send("Aled ça a pas marché : ¯\_(ツ)_/¯")
+            msg = await ctx.send("Loading") 
+
+            while True:
+                await msg.delete()
+                msg = await send_img(ctx, content, path, token)
+                _, new = await bot.wait_for('message_edit', timeout=42, check = lambda x, y : True)
+                content = new.content.replace(f'{PREFIX}tex ', '')
+
+        except asyncio.TimeoutError:
+            pass # Balek frr
 
     @commands.command()
     async def tex_help(self, ctx, *message):
