@@ -9,7 +9,7 @@ from discord.ext import commands
 from private import TOKEN
 
 intents = discord.Intents().all()
-PREFIX = "??"
+PREFIX = "!!"
 
 bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
@@ -126,7 +126,7 @@ class Converter(commands.Cog):
             while True:
                 await msg.delete()
                 msg = await send_img(ctx, content, path, token)
-                _, new = await bot.wait_for('message_edit', timeout=42, check = lambda x, y : True)
+                _, new = await bot.wait_for('message_edit', timeout=42, check = lambda x, n : n.id == ctx.message.id)
                 content = new.content.replace(f'{PREFIX}tex ', '')
 
         except asyncio.TimeoutError:
