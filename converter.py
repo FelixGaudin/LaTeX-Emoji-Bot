@@ -9,7 +9,7 @@ from discord.ext import commands
 from private import TOKEN
 
 intents = discord.Intents().all()
-PREFIX = "!!"
+PREFIX = "??"
 
 bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
