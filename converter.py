@@ -94,6 +94,8 @@ def make_img(content, path, token):
     rc = subprocess.check_call([converter, f'{token}'])
 
 async def send_img(ctx, content, path, token, old_msg=None):
+    author_pseudo = ctx.author.display_name
+    author_name = f"{ctx.author.name}#{ctx.author.discriminator}"
     try:
         try:
             make_img(content, path, token)
@@ -103,7 +105,7 @@ async def send_img(ctx, content, path, token, old_msg=None):
         finally:
             image = f"{token}.png"
             if old_msg != None: await old_msg.delete()
-            msg = await ctx.send(file=discord.File(image))
+            msg = await ctx.send(f"**{author_pseudo}** ({author_name})", file=discord.File(image))
             os.remove(image)
             return msg
     except Exception as e:
