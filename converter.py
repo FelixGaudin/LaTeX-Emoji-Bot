@@ -19,6 +19,9 @@ converter = os.path.join(current_path, 'convert.sh')
 
 def texit_compatibility(content):
 
+    if content.startswith(f"{PREFIX}tex"):
+        content = content.replace(f"{PREFIX}tex", "")
+
     content = content.replace('€', '$')   # normal math
 
     # centered math : \[ shitty maths \]
@@ -90,7 +93,7 @@ def make_img(content, path, token):
     # output is maybe written as {token}.png
     rc = subprocess.check_call([converter, f'{token}'])
 
-async def send_img(ctx, content, path, token):
+async def send_img(ctx, content, path, token, old_msg=None):
     try:
         try:
             make_img(content, path, token)
@@ -99,11 +102,13 @@ async def send_img(ctx, content, path, token):
             pass
         finally:
             image = f"{token}.png"
+            if old_msg != None: await old_msg.delete()
             msg = await ctx.send(file=discord.File(image))
             os.remove(image)
             return msg
     except Exception as e:
         print(e)
+        if old_msg != None: await old_msg.delete()
         msg = await ctx.send("Aled ça a pas marché : ¯\_(ツ)_/¯")
         return msg
 
@@ -115,7 +120,6 @@ class Converter(commands.Cog):
     async def tex(self, ctx, *message : str):
 
         content = " ".join(message)
-        content = texit_compatibility(content)
 
         token = ctx.message.id
         path = os.path.join(current_path, f"{token}")
@@ -124,10 +128,9 @@ class Converter(commands.Cog):
             msg = await ctx.send("Loading") 
 
             while True:
-                await msg.delete()
-                msg = await send_img(ctx, content, path, token)
+
+                msg = await send_img(ctx, texit_compatibility(content), path, token, msg)
                 _, new = await bot.wait_for('message_edit', timeout=42, check = lambda x, n : n.id == ctx.message.id)
-                content = new.content.replace(f'{PREFIX}tex ', '')
 
         except asyncio.TimeoutError:
             pass # Balek frr
