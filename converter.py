@@ -221,18 +221,24 @@ class Converter(commands.Cog):
 
                         await message.delete()
 
+
                     elif action == "remove_source":
 
                         original_message = await channel.fetch_message(old_message_id)
+                        
                         await original_message.delete()
+                        await message.clear_reaction(emoji)
 
                     elif action == "get_source":
 
                         author_pseudo = user.display_name
                         author_name = f"{user.name}#{user.discriminator}"
                         author_display = f"**{author_pseudo}** ({author_name})"
+                        
                         source = get_source(f"{author_id}_{old_message_id}")
-                        await message.edit(content = f"{author_display}\n```tex\n{source}\n```")
+
+                        await message.edit(content=f"{author_display}\n```tex\n{source}\n```")
+                        await message.clear_reaction(emoji)
 
             except:
                 pass
