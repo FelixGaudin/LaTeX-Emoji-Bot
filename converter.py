@@ -4,6 +4,7 @@ import os
 import pathlib
 import re
 import requests
+from PIL import Image
 import discord
 from discord.ext import commands
 from private import TOKEN
@@ -68,6 +69,10 @@ def format_text_part(e):
                 resp += make_text(f" [{unicode_emote}] ")
     return resp
 
+def sage_img(path, data):
+    with open(path, 'wb') as handler:
+        handler.write(data)
+
 def format_emote_part(e, path):
     # Create a folder to store emotes if not exists
     # https://appdividend.com/2021/07/03/how-to-create-directory-if-not-exist-in-python/
@@ -79,8 +84,15 @@ def format_emote_part(e, path):
         # https://stackoverflow.com/questions/30229231/python-save-image-from-url
         emote_data = requests.get(
             f"https://cdn.discordapp.com/emojis/{e}").content
-        with open(emote_path, 'wb') as handler:
-            handler.write(emote_data)
+        if (emote_data[:3] == b'GIF'):
+            gif_path = os.path.join(path, f"{e}.gif")
+            sage_img(gif_path, emote_data)
+            # https://www.kite.com/python/examples/4892/pil-extract-frames-from-an-animated-gif
+            im = Image.open(gif_path)
+            im.seek(0)
+            im.save(emote_path)
+        else:
+            sage_img(emote_path, emote_data)
 
     return r"\raisebox{-0.2\height}{\includegraphics[height=6mm]{" + emote_path + r"} }"
 
@@ -94,12 +106,10 @@ def save_source(content, token):
     with open(get_source_path(token), "w") as file:
         file.write(content)
 
-
 def get_source(token):
 
     with open(get_source_path(token)) as file:
         return file.read()
-
 
 def remove_source(token):
 
@@ -139,8 +149,8 @@ async def send_img(ctx, content, path, token, old_msg=None):
             pass
         finally:
             image = f"{token}.png"
-            if old_msg != None: await old_msg.delete()
             msg = await ctx.send(f"**{author_pseudo}** ({author_name})", file=discord.File(image))
+            if old_msg != None: await old_msg.delete()
 
             for emoji in reactions.keys():
                 await msg.add_reaction(emoji)
