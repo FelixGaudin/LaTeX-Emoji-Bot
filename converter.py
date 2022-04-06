@@ -1,4 +1,5 @@
 import asyncio
+from multiprocessing.connection import wait
 import subprocess
 import os
 import pathlib
@@ -136,9 +137,9 @@ def make_img(content, path, token):
     # output is maybe written as {token}.png
     rc = subprocess.check_call([converter, f'{token}'])
 
-async def send_img(ctx, content, path, token, old_msg=None):
-    author_pseudo = ctx.author.display_name
-    author_name = f"{ctx.author.name}#{ctx.author.discriminator}"
+async def send_img(channel, author, content, path, token, old_msg=None):
+    author_pseudo = author.display_name
+    author_name = f"{author.name}#{author.discriminator}"
 
     save_source(content, token)
     try:
@@ -149,7 +150,7 @@ async def send_img(ctx, content, path, token, old_msg=None):
             pass
         finally:
             image = f"{token}.png"
-            msg = await ctx.send(f"**{author_pseudo}** ({author_name})", file=discord.File(image))
+            msg = await channel.send(f"**{author_pseudo}** ({author_name})", file=discord.File(image))
             if old_msg != None: await old_msg.delete()
 
             for emoji in reactions.keys():
@@ -161,7 +162,7 @@ async def send_img(ctx, content, path, token, old_msg=None):
     except Exception as e:
         print(e)
         if old_msg != None: await old_msg.delete()
-        msg = await ctx.send("Aled ça a pas marché : ¯\_(ツ)_/¯")
+        msg = await channel.send("Aled ça a pas marché : ¯\_(ツ)_/¯")
         return msg
 
 
@@ -170,22 +171,28 @@ class Converter(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.max_concurrency(1, wait=True)
+    # @commands.max_concurrency(1, wait=True)
+    @commands.cooldown(10, 60, commands.BucketType.user)
     @commands.command()
     async def tex(self, ctx, *message : str):
 
         content = " ".join(message)
 
-        token = f"{ctx.author.id}_{ctx.message.id}"
+        await self.tex_function(ctx.channel, ctx.author, ctx.message.id, content)
+
+    async def tex_function(self, channel, author, message_id, content):
+        
+        token = f"{author.id}_{message_id}"
+
         path = os.path.join(current_path, f"{token}")
 
         try:
-            msg = await ctx.send("Loading") 
+            msg = await channel.send("Loading") 
 
             while True:
 
-                msg = await send_img(ctx, texit_compatibility(content), path, token, msg)
-                _, new = await bot.wait_for('message_edit', timeout=42, check = lambda x, n : n.id == ctx.message.id)
+                msg = await send_img(channel, author, texit_compatibility(content), path, token, msg)
+                _, new = await bot.wait_for('message_edit', timeout=42, check=lambda x, n: n.id == message_id)
                 content = new.content
 
         except asyncio.TimeoutError:
@@ -205,6 +212,11 @@ class Converter(commands.Cog):
         embed.add_field(name="Emojis", value="The unicode emoji's are webscrapped from https://unicode.org/emoji/charts/full-emoji-list.html", inline=False)
         embed.set_footer(text="If you get any troubles with the bot don't hesitate to contact me (Félix#9897) or post an issue on GitHub : https://github.com/FelixGaudin/LaTeX-Emoji-Bot")
         await ctx.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_message(self, msg):
+        if re.search("(€.*€)|(/{.*/})", msg.content) and not msg.content.startswith(f'{PREFIX}'):
+            await self.tex_function(msg.channel, msg.author, msg.id, msg.content)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, ctx):
@@ -252,7 +264,7 @@ class Converter(commands.Cog):
 
             except:
                 pass
-
+    
 
 bot.add_cog(Converter(bot))
 
