@@ -43,7 +43,8 @@ def texit_compatibility(content):
     return content
 
 def make_text(s):
-    return r"\textcolor{white}{" + s + r"}"
+    # Deprecated
+    return s
 
 def discord_emote_finder(s):
     pattern = re.compile("<(?:a)?:[^:]+:([0-9]+)>")
@@ -117,7 +118,7 @@ def remove_source(token):
 
 
 def make_img(content, path, token):
-    text = r"\documentclass[preview, 12pt]{standalone}\nonstopmode\usepackage{amsmath}\usepackage{fancycom}\usepackage{color}\usepackage{tikz-cd}\begin{document}"
+    text = r"\documentclass[preview, 12pt]{standalone}\nonstopmode\usepackage{amsmath}\usepackage{fancycom}\usepackage{color}\usepackage{tikz-cd}\begin{document}\color{white}"
 
     for i, e in enumerate(discord_emote_finder(content)):
         if (i % 2 == 0):
