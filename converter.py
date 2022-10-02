@@ -11,6 +11,7 @@ from private import TOKEN
 
 intents = discord.Intents().all()
 PREFIX = "??"
+TIMEOUT = 120
 
 bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
@@ -192,7 +193,7 @@ class Converter(commands.Cog):
             while True:
 
                 msg = await send_img(channel, author, texit_compatibility(content), path, token, msg)
-                _, new = await bot.wait_for('message_edit', timeout=42, check=lambda x, n: n.id == message_id)
+                _, new = await bot.wait_for('message_edit', timeout=TIMEOUT, check=lambda x, n: n.id == message_id)
                 content = new.content
 
         except asyncio.TimeoutError:
